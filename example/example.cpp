@@ -113,11 +113,22 @@ int main()
         std::array<int, 4> arr2 = {4, 3, 2, 1};
 
         //not the cleabest but it does work.. problem is this requires to set code in separate functions.
+        // archive.setNextName("Arr");
+
+        //Current issue. that this is used so we cannot use same code for only 1 serialize method.. in addition.. This does not follow same standard as the other Archives.
         archive.makeFlow("Arr");
+
+        for (auto&& value : arr)
+            archive(value);
+
+        archive.endFlow();
+
+        archive.makeFlow("Arr1");
         for (auto&& value : arr)
             archive(value);
         archive.endFlow();
 
+        archive.setNextName("Int_Array");
         archive(arr2);
 
 
@@ -128,10 +139,11 @@ int main()
         cereal::YAMLInputArchive archive(is);
         std::array<MyRecord, 4> arr{};
         std::array<int, 4> arr2{};
+
         archive(arr);
 
         std::cout << "arr1 = " << arr[0] << "," << arr[1] << "," << arr[2] << "," << arr[3] << std::endl;
-
+        archive.setNextName("Int_Array");
         archive(arr2);
 
         std::cout << "arr2 = " << arr2[0] << "," << arr2[1] << "," << arr2[2] << "," << arr2[3] << std::endl;
