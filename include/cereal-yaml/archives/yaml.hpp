@@ -314,6 +314,13 @@ public:
 
     }
 
+    void endFlow() {
+        if (nodeStack.top() == NodeType::InFlow) {
+          finishNode();
+        }
+
+    }
+
     //! @}
 
 
