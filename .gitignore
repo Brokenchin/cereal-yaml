@@ -82,3 +82,7 @@ Training
 Shop
 Blog
 About
+
+cmake-build-debug-visual-studio/
+
+.idea/
