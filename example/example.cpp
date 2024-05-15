@@ -124,8 +124,7 @@ int main()
         archive.endFlow();
 
         archive.makeFlow("Arr1");
-        for (auto&& value : arr)
-            archive(value);
+        archive(arr2);
         archive.endFlow();
 
         archive.setNextName("Int_Array");
@@ -133,6 +132,8 @@ int main()
 
 
     }
+
+    std::cout << "output=\n" << os.str() << std::endl;
 
     {
         std::istringstream is(os.str());
