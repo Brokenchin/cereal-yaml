@@ -46,7 +46,7 @@ namespace cereal {
 
 class YAMLOutputArchive : public OutputArchive<YAMLOutputArchive>, public traits::TextArchive
 {
-    enum class NodeType { StartObject, InObject, StartArray, InArray };
+    enum class NodeType { StartObject, InObject, StartArray, InArray, StartFlow, InFlow };
 
 public:
     YAMLOutputArchive(std::ostream& stream)
@@ -65,6 +65,10 @@ public:
             emitter << YAML::EndMap;
         }
         else if (nodeStack.top() == NodeType::InArray)
+        {
+            emitter << YAML::EndSeq;
+        }
+        else if (nodeStack.top() == NodeType::InFlow)
         {
             emitter << YAML::EndSeq;
         }
@@ -112,8 +116,15 @@ public:
         // We'll also end any object/arrays we happen to be in
         switch(nodeStack.top())
         {
-        case NodeType::StartArray:
+        case NodeType::StartFlow:
             emitter << YAML::BeginSeq;
+            break;
+        case NodeType::InFlow:
+            emitter << YAML::EndSeq;
+            break;
+        case NodeType::StartArray: {
+            emitter << YAML::BeginSeq;
+        }
         case NodeType::InArray:
             emitter << YAML::EndSeq;
             break;
@@ -122,6 +133,7 @@ public:
         case NodeType::InObject:
             emitter << YAML::EndMap;
             break;
+
         }
 
         nodeStack.pop();
@@ -228,6 +240,13 @@ public:
         NodeType const & nodeType = nodeStack.top();
 
         // Start up either an object or an array, depending on state
+
+        if (nodeType == NodeType::StartFlow) {
+            emitter << YAML::Flow;
+            emitter << YAML::BeginSeq;
+            nodeStack.top() = NodeType::InFlow;
+
+        }
         if (nodeType == NodeType::StartArray)
         {
             emitter << YAML::BeginSeq;
@@ -244,6 +263,16 @@ public:
         {
             return;
         }
+
+        if (nodeType == NodeType::InFlow)
+        {
+
+            //all we need is the key now to be written.
+
+            return;
+        }
+
+
 
         emitter << YAML::Key;
 
@@ -265,6 +294,22 @@ public:
     void makeArray()
     {
         nodeStack.top() = NodeType::StartArray;
+    }
+
+    //! Designates that the current node should be output as an flow, not an object or array
+    void makeFlow(const char * name = "") {
+
+        startNode();
+        nodeStack.top() = NodeType::StartFlow;
+
+        if (name != "") {
+            setNextName(name);
+        } else {
+            std::string name_gen = "value" + std::to_string(nameCounter.top()++) + "\0";
+            setNextName(name_gen.c_str());
+            //gen name.
+        }
+
     }
 
     //! @}
