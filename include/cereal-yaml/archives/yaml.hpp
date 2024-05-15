@@ -149,7 +149,9 @@ public:
     //! Saves a bool to the current node
     void saveValue(bool b)                { emitter << b;   }
     //! Saves an int to the current node
-    void saveValue(int i)                 { emitter << i;   }
+    void saveValue(int i) {
+        emitter << i;
+    }
     //! Saves a uint to the current node
     void saveValue(unsigned u)            { emitter << u;   }
     //! Saves an int64 to the current node
@@ -242,18 +244,24 @@ public:
         // Start up either an object or an array, depending on state
 
         if (nodeType == NodeType::StartFlow) {
-            emitter << YAML::Flow;
-            emitter << YAML::BeginSeq;
-            nodeStack.top() = NodeType::InFlow;
+            // emitter << YAML::Flow;
+            // emitter << YAML::BeginSeq;
+            // nodeStack.top() = NodeType::InFlow;
 
         }
-        if (nodeType == NodeType::StartArray)
+        else if (nodeType == NodeType::StartArray)
         {
+
+            static bool is_flow = true;
+            if (is_flow)
+                emitter << YAML::Flow;
+
             emitter << YAML::BeginSeq;
             nodeStack.top() = NodeType::InArray;
         }
         else if (nodeType == NodeType::StartObject)
         {
+
             emitter << YAML::BeginMap;
             nodeStack.top() = NodeType::InObject;
         }
@@ -263,16 +271,6 @@ public:
         {
             return;
         }
-
-        if (nodeType == NodeType::InFlow)
-        {
-
-            //all we need is the key now to be written.
-
-            return;
-        }
-
-
 
         emitter << YAML::Key;
 
@@ -294,31 +292,6 @@ public:
     void makeArray()
     {
         nodeStack.top() = NodeType::StartArray;
-    }
-
-    //! Designates that the current node should be output as an flow, not an object or array
-    void makeFlow(const char * name = "") {
-
-        if (name != "") {
-            setNextName(name);
-        } else {
-            std::string name_gen = "value" + std::to_string(nameCounter.top()++) + "\0";
-            setNextName(name_gen.c_str());
-            //gen name.
-        }
-
-        startNode();
-        nodeStack.top() = NodeType::StartFlow;
-
-
-
-    }
-
-    void endFlow() {
-        if (nodeStack.top() == NodeType::InFlow) {
-          finishNode();
-        }
-
     }
 
     //! @}
@@ -703,7 +676,7 @@ void epilogue(YAMLInputArchive &, NameValuePair<T> const &)
 /*! SizeTags are strictly ignored for YAML, they just indicate
     that the current node should be made into an array */
 template <class T> inline
-void prologue(YAMLOutputArchive & ar, SizeTag<T> const &)
+void prologue(YAMLOutputArchive & ar, SizeTag<T> const & sz)
 {
     ar.makeArray();
 }
