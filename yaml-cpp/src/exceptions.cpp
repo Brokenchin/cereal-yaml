@@ -2,8 +2,9 @@
 
 // This is here for compatibility with older versions of Visual Studio
 // which don't support noexcept
+// Kahvee様　What does this mean? as far as I know, noexcept is a C++11 feature, so it should be supported by all compilers that support C++11.
 #ifdef _MSC_VER
-    #define YAML_CPP_NOEXCEPT _NOEXCEPT
+    #define YAML_CPP_NOEXCEPT noexcept
 #else
     #define YAML_CPP_NOEXCEPT noexcept
 #endif
