@@ -151,7 +151,7 @@ int main()
 
         // archive.setNextName("arr");
         // archive.startNode();
-        archive.makeFlow(); // Serializes the size
+        archive.makeFlow("arr"); // Serializes the size
 
         //archive(test);
         for (auto&& value : test)

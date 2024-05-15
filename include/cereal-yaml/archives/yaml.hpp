@@ -299,9 +299,6 @@ public:
     //! Designates that the current node should be output as an flow, not an object or array
     void makeFlow(const char * name = "") {
 
-        startNode();
-        nodeStack.top() = NodeType::StartFlow;
-
         if (name != "") {
             setNextName(name);
         } else {
@@ -309,6 +306,11 @@ public:
             setNextName(name_gen.c_str());
             //gen name.
         }
+
+        startNode();
+        nodeStack.top() = NodeType::StartFlow;
+
+
 
     }
 
