@@ -44,11 +44,35 @@
 
 namespace cereal {
 
+
+enum class Style { Block, Flow };
+
+
 class YAMLOutputArchive : public OutputArchive<YAMLOutputArchive>, public traits::TextArchive
 {
     enum class NodeType { StartObject, InObject, StartArray, InArray, StartFlow, InFlow };
 
+    Style current_style = Style::Block;
+
 public:
+
+    void Set_Style_Flow() {
+        current_style = Style::Flow;
+    }
+
+    void Set_Style_Block() {
+        current_style = Style::Block;
+    }
+
+    // void Set_Style(const Style style) {
+    //     if (style == Style::Block) {
+    //         current_style = Style::Block;
+    //     }
+    //     else {
+    //         current_style = Style::Flow;
+    //     }
+    // }
+
     YAMLOutputArchive(std::ostream& stream)
         : OutputArchive<YAMLOutputArchive>(this)
         , out(stream)
@@ -149,7 +173,9 @@ public:
     //! Saves a bool to the current node
     void saveValue(bool b)                { emitter << b;   }
     //! Saves an int to the current node
-    void saveValue(int i)                 { emitter << i;   }
+    void saveValue(int i) {
+        emitter << i;
+    }
     //! Saves a uint to the current node
     void saveValue(unsigned u)            { emitter << u;   }
     //! Saves an int64 to the current node
@@ -241,19 +267,18 @@ public:
 
         // Start up either an object or an array, depending on state
 
-        if (nodeType == NodeType::StartFlow) {
-            emitter << YAML::Flow;
-            emitter << YAML::BeginSeq;
-            nodeStack.top() = NodeType::InFlow;
+         if (nodeType == NodeType::StartArray)
+         {
 
-        }
-        if (nodeType == NodeType::StartArray)
-        {
+            if (current_style == Style::Flow)
+                emitter << YAML::Flow;
+
             emitter << YAML::BeginSeq;
             nodeStack.top() = NodeType::InArray;
         }
         else if (nodeType == NodeType::StartObject)
         {
+
             emitter << YAML::BeginMap;
             nodeStack.top() = NodeType::InObject;
         }
@@ -263,16 +288,6 @@ public:
         {
             return;
         }
-
-        if (nodeType == NodeType::InFlow)
-        {
-
-            //all we need is the key now to be written.
-
-            return;
-        }
-
-
 
         emitter << YAML::Key;
 
@@ -294,31 +309,6 @@ public:
     void makeArray()
     {
         nodeStack.top() = NodeType::StartArray;
-    }
-
-    //! Designates that the current node should be output as an flow, not an object or array
-    void makeFlow(const char * name = "") {
-
-        if (name != "") {
-            setNextName(name);
-        } else {
-            std::string name_gen = "value" + std::to_string(nameCounter.top()++) + "\0";
-            setNextName(name_gen.c_str());
-            //gen name.
-        }
-
-        startNode();
-        nodeStack.top() = NodeType::StartFlow;
-
-
-
-    }
-
-    void endFlow() {
-        if (nodeStack.top() == NodeType::InFlow) {
-          finishNode();
-        }
-
     }
 
     //! @}
@@ -669,6 +659,7 @@ private:
 
 }; // YAMLInputArchive
 
+
 // ######################################################################
 // YAMLArchive prologue and epilogue functions
 // ######################################################################
@@ -703,7 +694,7 @@ void epilogue(YAMLInputArchive &, NameValuePair<T> const &)
 /*! SizeTags are strictly ignored for YAML, they just indicate
     that the current node should be made into an array */
 template <class T> inline
-void prologue(YAMLOutputArchive & ar, SizeTag<T> const &)
+void prologue(YAMLOutputArchive & ar, SizeTag<T> const & sz)
 {
     ar.makeArray();
 }

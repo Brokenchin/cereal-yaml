@@ -1,14 +1,62 @@
 #include <cereal-yaml/archives/yaml.hpp>
 
+#include <cereal/cereal.hpp>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>
-#include <cereal/types/array.hpp>
+// #include <cereal/types/array.hpp>
+#include <array>
+#include <vector>
+
+
 #include <fstream>
+#include <type_traits>
+
+#include "cereal-yaml/helper/utility.hpp"
+
+#include <cereal/archives/json.hpp>
+namespace cereal {
+
+    template <class Archive, typename T, size_t N, std::enable_if_t<std::is_arithmetic<T>::value, int> = 1>
+    void save(Archive& archive, const std::array<T, N>& array) {
+        //archive( make_size_tag( static_cast<size_type>(array.size()) ) );
+        for (auto& item : array) {
+            archive(item);
+        }
+    }
+
+    template <class Archive, typename T, size_t N, std::enable_if_t<std::is_arithmetic<T>::value, int> = 1>
+    void load(Archive& archive, std::array<T, N>& array) {
+        for (auto& item : array) {
+            archive(item);
+        }
+    }
+
+    //I do need templates here to only flowisize the arrays with arithmetics.
+    template <class Archive, typename T, size_t N,
+    std::enable_if_t<!std::is_arithmetic<T>::value, int> = 0>
+    void save(Archive& archive, const std::array<T, N>& array) {
+        //archive( make_size_tag( static_cast<size_type>(array.size()) ) );
+        //archive(cereal::binary_data(array.data() , array.size() * sizeof(T)));
+        for (auto& item : array) {
+            archive(item);
+        }
+    }
+
+    template <class Archive, typename T, size_t N,
+    std::enable_if_t<!std::is_arithmetic<T>::value, int> = 0>
+    void load(Archive& archive, std::array<T, N>& array) {
+        // archive( make_size_tag( static_cast<size_type>(array.size()) ) );
+        for (auto& item : array) {
+            archive(item);
+        }
+    }
+
+}
 
 struct Tag_Component {
 
-    std::string name;
+    std::string name = "test_name";
 
     template <class Archive>
     void serialize(Archive& ar)
@@ -103,6 +151,7 @@ int main()
 {
 
 
+
     std::ostringstream os;
     os.clear();
     os.str("");
@@ -111,43 +160,62 @@ int main()
         cereal::YAMLOutputArchive archive(os);
         std::array<MyRecord, 4> arr = {MyRecord(1, 2, 3.0f), MyRecord(4, 5, 6.1f), MyRecord(7, 8, 9.2f), MyRecord(10, 11, 12.3f)};
         std::array<int, 4> arr2 = {4, 3, 2, 1};
-
+        std::vector<int> vec = {4, 3, 2, 1};
         //not the cleabest but it does work.. problem is this requires to set code in separate functions.
         // archive.setNextName("Arr");
 
         //Current issue. that this is used so we cannot use same code for only 1 serialize method.. in addition.. This does not follow same standard as the other Archives.
-        archive.makeFlow("Arr");
+        //archive.makeFlow("Arr");
 
-        for (auto&& value : arr)
-            archive(value);
+        // for (auto&& value : arr2)
+        //     archive(value);
 
-        archive.endFlow();
+        // archive(cereal::make_size_tag(arr2.size()));
+        // archive(std::string("Entities"));
+        //
+        // for (auto&& value : arr)
+        //     archive(value);
 
-        archive.makeFlow("Arr1");
-        archive(arr2);
-        archive.endFlow();
+        // cereal::Set_YAML_Style_Flow(archive);
 
-        archive.setNextName("Int_Array");
-        archive(arr2);
+        // archive(cereal::make_nvp("vec", vec));
+        //
+        // //cereal::Set_YAML_Style_Flow(archive);
+        // archive(cereal::make_nvp("Array", arr2));
+        //
+        // //cereal::Set_YAML_Style_Block(archive);
+        // archive(cereal::make_nvp("Array", arr2));
 
 
+        cereal::Format_Flow(archive, "Array", arr, false);
+
+        //archive.endFlow();
+
+        std::ifstream is(os.str());
+        // cereal::YAMLInputArchive archive2(is);
+        // cereal::JSONOutputArchive archive3(os);
+
+
+
+        //
+        // cereal::Set_YAML_Style_Flow(archive3);
     }
 
     std::cout << "output=\n" << os.str() << std::endl;
 
     {
-        std::istringstream is(os.str());
-        cereal::YAMLInputArchive archive(is);
-        std::array<MyRecord, 4> arr{};
-        std::array<int, 4> arr2{};
-
-        archive(arr);
-
-        std::cout << "arr1 = " << arr[0] << "," << arr[1] << "," << arr[2] << "," << arr[3] << std::endl;
-        archive.setNextName("Int_Array");
-        archive(arr2);
-
-        std::cout << "arr2 = " << arr2[0] << "," << arr2[1] << "," << arr2[2] << "," << arr2[3] << std::endl;
+        // std::istringstream is(os.str());
+        // cereal::YAMLInputArchive archive(is);
+        // std::array<MyRecord, 4> arr{};
+        // std::array<int, 4> arr2{};
+        //
+        // archive(arr);
+        //
+        // std::cout << "arr1 = " << arr[0] << "," << arr[1] << "," << arr[2] << "," << arr[3] << std::endl;
+        // archive.setNextName("Int_Array");
+        // archive(arr2);
+        //
+        // std::cout << "arr2 = " << arr2[0] << "," << arr2[1] << "," << arr2[2] << "," << arr2[3] << std::endl;
 
     }
 
