@@ -44,11 +44,35 @@
 
 namespace cereal {
 
+
+enum class Style { Block, Flow };
+
+
 class YAMLOutputArchive : public OutputArchive<YAMLOutputArchive>, public traits::TextArchive
 {
     enum class NodeType { StartObject, InObject, StartArray, InArray, StartFlow, InFlow };
 
+    Style current_style = Style::Block;
+
 public:
+
+    void Set_Style_Flow() {
+        current_style = Style::Flow;
+    }
+
+    void Set_Style_Block() {
+        current_style = Style::Block;
+    }
+
+    // void Set_Style(const Style style) {
+    //     if (style == Style::Block) {
+    //         current_style = Style::Block;
+    //     }
+    //     else {
+    //         current_style = Style::Flow;
+    //     }
+    // }
+
     YAMLOutputArchive(std::ostream& stream)
         : OutputArchive<YAMLOutputArchive>(this)
         , out(stream)
@@ -243,17 +267,10 @@ public:
 
         // Start up either an object or an array, depending on state
 
-        if (nodeType == NodeType::StartFlow) {
-            // emitter << YAML::Flow;
-            // emitter << YAML::BeginSeq;
-            // nodeStack.top() = NodeType::InFlow;
+         if (nodeType == NodeType::StartArray)
+         {
 
-        }
-        else if (nodeType == NodeType::StartArray)
-        {
-
-            static bool is_flow = true;
-            if (is_flow)
+            if (current_style == Style::Flow)
                 emitter << YAML::Flow;
 
             emitter << YAML::BeginSeq;
@@ -641,6 +658,7 @@ private:
     YAML::Node itsDocument;                 //!< YAML document
 
 }; // YAMLInputArchive
+
 
 // ######################################################################
 // YAMLArchive prologue and epilogue functions

@@ -1,5 +1,9 @@
 cmake_minimum_required (VERSION 2.6.2)
 project (cereal-yaml)
+#
+#set(CMAKE_CXX_STANDARD 14)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+##set(CMAKE_CXX_STANDARD 11) # C++11
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.0) # installing cereal-yaml requires INTERFACE lib
     option(JUST_INSTALL_CEREAL_YAML "Don't do anything besides installing the library" OFF)
@@ -14,9 +18,10 @@ else()
 endif()
 
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /W3 /WX")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /W3 /WX /Zc:__cplusplus")
 else()
     set(CMAKE_CXX_FLAGS "-Wall -g -Wextra -Wshadow -pedantic -Wold-style-cast ${CMAKE_CXX_FLAGS}")
+
     option(WITH_WERROR "Compile with '-Werror' C++ compiler flag" OFF)
     if(WITH_WERROR)
         set(CMAKE_CXX_FLAGS "-Werror ${CMAKE_CXX_FLAGS}")
@@ -27,12 +32,14 @@ else()
         if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD STREQUAL "98")
             set(CMAKE_CXX_STANDARD 11)
         endif()
-        set(CMAKE_CXX_STANDARD_REQUIRED ON)
+            set(CMAKE_CXX_STANDARD_REQUIRED ON)
     endif()
 endif()
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.0)
-    add_library(cereal-yaml INTERFACE)
+    add_library(cereal-yaml INTERFACE
+            include/cereal-yaml/helper/Utility.hpp
+            include/cereal-yaml/helper/utility.hpp)
     target_include_directories(cereal-yaml INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>

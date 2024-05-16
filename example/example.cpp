@@ -11,26 +11,24 @@
 
 #include <fstream>
 #include <type_traits>
+
+#include "cereal-yaml/helper/utility.hpp"
+
+#include <cereal/archives/json.hpp>
 namespace cereal {
 
-
-    //I do need templates here to only flowisize the arrays with arithmetics.
-    template <class Archive, typename T, size_t N,
-              std::enable_if_t<std::is_arithmetic<T>::value, int> = 0>
+    template <class Archive, typename T, size_t N, std::enable_if_t<std::is_arithmetic<T>::value, int> = 1>
     void save(Archive& archive, const std::array<T, N>& array) {
-        archive( make_size_tag( static_cast<size_type>(array.size()) ) );
-        //archive(cereal::binary_data(array.data() , array.size() * sizeof(T)));
+        //archive( make_size_tag( static_cast<size_type>(array.size()) ) );
         for (auto& item : array) {
             archive(item);
         }
     }
 
-    template <class Archive, typename T, size_t N,
-              std::enable_if_t<std::is_arithmetic<T>::value, int> = 0>
+    template <class Archive, typename T, size_t N, std::enable_if_t<std::is_arithmetic<T>::value, int> = 1>
     void load(Archive& archive, std::array<T, N>& array) {
-        // archive( make_size_tag( static_cast<size_type>(array.size()) ) );
         for (auto& item : array) {
-            archive(cereal::make_nvp("item", item));
+            archive(item);
         }
     }
 
@@ -50,7 +48,7 @@ namespace cereal {
     void load(Archive& archive, std::array<T, N>& array) {
         // archive( make_size_tag( static_cast<size_type>(array.size()) ) );
         for (auto& item : array) {
-            archive(cereal::make_nvp("item", item));
+            archive(item);
         }
     }
 
@@ -58,7 +56,7 @@ namespace cereal {
 
 struct Tag_Component {
 
-    std::string name;
+    std::string name = "test_name";
 
     template <class Archive>
     void serialize(Archive& ar)
@@ -153,6 +151,7 @@ int main()
 {
 
 
+
     std::ostringstream os;
     os.clear();
     os.str("");
@@ -172,15 +171,34 @@ int main()
         //     archive(value);
 
         // archive(cereal::make_size_tag(arr2.size()));
-        archive(cereal::make_nvp("Entities", arr));
+        // archive(std::string("Entities"));
+        //
+        // for (auto&& value : arr)
+        //     archive(value);
 
-        archive(cereal::make_nvp("vec", vec));
-        archive(cereal::make_nvp("Array", arr2));
+        // cereal::Set_YAML_Style_Flow(archive);
+
+        // archive(cereal::make_nvp("vec", vec));
+        //
+        // //cereal::Set_YAML_Style_Flow(archive);
+        // archive(cereal::make_nvp("Array", arr2));
+        //
+        // //cereal::Set_YAML_Style_Block(archive);
+        // archive(cereal::make_nvp("Array", arr2));
+
+
+        cereal::Format_Flow(archive, "Array", arr, false);
+
         //archive.endFlow();
 
+        std::ifstream is(os.str());
+        // cereal::YAMLInputArchive archive2(is);
+        // cereal::JSONOutputArchive archive3(os);
 
 
 
+        //
+        // cereal::Set_YAML_Style_Flow(archive3);
     }
 
     std::cout << "output=\n" << os.str() << std::endl;
