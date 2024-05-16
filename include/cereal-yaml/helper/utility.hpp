@@ -14,6 +14,7 @@ namespace cereal {
         //ar(cereal::make_size_tag(0));
         ar.Set_Style_Flow();
     }
+    
 
     template<typename T>
     typename std::enable_if<!std::is_same<YAMLOutputArchive, T>::value, void>::type
