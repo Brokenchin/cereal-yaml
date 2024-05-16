@@ -38,7 +38,6 @@ endif()
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.0)
     add_library(cereal-yaml INTERFACE
-            include/cereal-yaml/helper/Utility.hpp
             include/cereal-yaml/helper/utility.hpp)
     add_library(cereal::cereal-yaml ALIAS cereal-yaml)
     target_include_directories(cereal-yaml INTERFACE
