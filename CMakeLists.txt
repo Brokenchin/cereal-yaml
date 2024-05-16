@@ -6,7 +6,7 @@ project (cereal-yaml)
 ##set(CMAKE_CXX_STANDARD 11) # C++11
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.0) # installing cereal-yaml requires INTERFACE lib
-    option(JUST_INSTALL_CEREAL_YAML "Don't do anything besides installing the library" OFF)
+    option(JUST_INSTALL_CEREAL_YAML "Don't do anything besides installing the library" ON)
 endif()
 
 option(THREAD_SAFE "Use mutexes to ensure thread safety" OFF)
@@ -40,6 +40,7 @@ if(NOT CMAKE_VERSION VERSION_LESS 3.0)
     add_library(cereal-yaml INTERFACE
             include/cereal-yaml/helper/Utility.hpp
             include/cereal-yaml/helper/utility.hpp)
+    add_library(cereal::cereal-yaml ALIAS cereal-yaml)
     target_include_directories(cereal-yaml INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
