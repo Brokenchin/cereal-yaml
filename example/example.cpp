@@ -91,7 +91,7 @@ struct MyRecord
     void serialize(Archive& ar)
     {
         ar(cereal::make_nvp("Entity", id), y, cereal::make_nvp("Useless Z", z));
-        ar(tag_comp);
+        ar(CEREAL_NVP(tag_comp));
     }
 
     friend std::ostream& operator<<(std::ostream& os, const MyRecord& myRecord);
@@ -158,7 +158,7 @@ int main()
 
     {
         cereal::YAMLOutputArchive archive(os);
-        std::array<MyRecord, 4> arr = {MyRecord(1, 2, 3.0f), MyRecord(4, 5, 6.1f), MyRecord(7, 8, 9.2f), MyRecord(10, 11, 12.3f)};
+        std::vector<MyRecord> arr = {MyRecord(1, 2, 3.0f), MyRecord(4, 5, 6.1f), MyRecord(7, 8, 9.2f), MyRecord(10, 11, 12.3f)};
         std::array<int, 4> arr2 = {4, 3, 2, 1};
         std::vector<int> vec = {4, 3, 2, 1};
         //not the cleabest but it does work.. problem is this requires to set code in separate functions.
@@ -187,9 +187,30 @@ int main()
         // archive(cereal::make_nvp("Array", arr2));
 
 
-        cereal::Format_Flow(archive, "Array", arr, false);
+        cereal::Format_Flow(archive, "Array", arr, 4);
+
+        cereal::Set_YAML_Style_Block(archive);
+        archive.setNextName("Arr");
+
+
+        archive(arr);
 
         //archive.endFlow();
+
+        // cereal::Set_YAML_Style_Flow(archive);
+        // archive.setNextName("array");
+        // archive.startNode();
+        // archive.makeArray();
+        //
+        // archive(5);
+        // archive(3);
+        // archive(2);
+        // archive(4);
+        // archive.finishNode();
+
+        archive(arr2);
+        // archive(cereal::make_nvp("Array", arr2));
+        //cereal::Set_YAML_Style_Block(archive);
 
         std::ifstream is(os.str());
         // cereal::YAMLInputArchive archive2(is);
