@@ -120,6 +120,7 @@ namespace cereal {
     template<class Archive_T, typename T, typename = std::enable_if_t<!traits::is_text_archive<Archive_T>::value>>
     static void Format_Flow(Archive_T& archive, const char* name, T& data, const size_t size) {
 
+        //archive( make_size_tag( static_cast<size_type>(size) ) );
         for (size_t i = 0; i < size; i++)
             archive(data[i]);
     };

@@ -4,7 +4,7 @@
 #include <cereal/types/memory.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>
-//#include <cereal/types/array.hpp>
+#include <cereal/types/array.hpp>
 #include <array>
 #include <vector>
 
@@ -18,40 +18,40 @@
 #include <cereal/archives/json.hpp>
 namespace cereal {
 
-    template <class Archive, typename T, size_t N, std::enable_if_t<std::is_arithmetic<T>::value, int> = 1>
-    void save(Archive& archive, const std::array<T, N>& array) {
-        //archive( make_size_tag( static_cast<size_type>(array.size()) ) );
-        for (auto& item : array) {
-            archive(item);
-        }
-    }
-
-    template <class Archive, typename T, size_t N, std::enable_if_t<std::is_arithmetic<T>::value, int> = 1>
-    void load(Archive& archive, std::array<T, N>& array) {
-        for (auto& item : array) {
-            archive(item);
-        }
-    }
-
-    //I do need templates here to only flowisize the arrays with arithmetics.
-    template <class Archive, typename T, size_t N,
-    std::enable_if_t<!std::is_arithmetic<T>::value, int> = 0>
-    void save(Archive& archive, const std::array<T, N>& array) {
-        //archive( make_size_tag( static_cast<size_type>(array.size()) ) );
-        //archive(cereal::binary_data(array.data() , array.size() * sizeof(T)));
-        for (auto& item : array) {
-            archive(item);
-        }
-    }
-
-    template <class Archive, typename T, size_t N,
-    std::enable_if_t<!std::is_arithmetic<T>::value, int> = 0>
-    void load(Archive& archive, std::array<T, N>& array) {
-        // archive( make_size_tag( static_cast<size_type>(array.size()) ) );
-        for (auto& item : array) {
-            archive(item);
-        }
-    }
+    // template <class Archive, typename T, size_t N, std::enable_if_t<std::is_arithmetic<T>::value, int> = 1>
+    // void save(Archive& archive, const std::array<T, N>& array) {
+    //     //archive( make_size_tag( static_cast<size_type>(array.size()) ) );
+    //     for (auto& item : array) {
+    //         archive(item);
+    //     }
+    // }
+    //
+    // template <class Archive, typename T, size_t N, std::enable_if_t<std::is_arithmetic<T>::value, int> = 1>
+    // void load(Archive& archive, std::array<T, N>& array) {
+    //     for (auto& item : array) {
+    //         archive(item);
+    //     }
+    // }
+    //
+    // //I do need templates here to only flowisize the arrays with arithmetics.
+    // template <class Archive, typename T, size_t N,
+    // std::enable_if_t<!std::is_arithmetic<T>::value, int> = 0>
+    // void save(Archive& archive, const std::array<T, N>& array) {
+    //     //archive( make_size_tag( static_cast<size_type>(array.size()) ) );
+    //     //archive(cereal::binary_data(array.data() , array.size() * sizeof(T)));
+    //     for (auto& item : array) {
+    //         archive(item);
+    //     }
+    // }
+    //
+    // template <class Archive, typename T, size_t N,
+    // std::enable_if_t<!std::is_arithmetic<T>::value, int> = 0>
+    // void load(Archive& archive, std::array<T, N>& array) {
+    //     // archive( make_size_tag( static_cast<size_type>(array.size()) ) );
+    //     for (auto& item : array) {
+    //         archive(item);
+    //     }
+    // }
 
 }
 
@@ -268,7 +268,7 @@ int main()
         cereal::BinaryOutputArchive archive(osb);
 
         cereal::Format_Flow(archive, "Vector", arr);
-        cereal::Format_Flow(archive, "Array", arr, 4);
+        cereal::Format_Flow(archive, "Array", arr2, 4);
 
         archive(vec);
 
@@ -287,7 +287,7 @@ int main()
         cereal::BinaryInputArchive archive(isb);
 
         cereal::Format_Flow(archive, "Vector", arr_in);
-        cereal::Format_Flow(archive, "Array", arr2_in, 4);
+        cereal::Format_Flow(archive, "Array", arr2_in, 4); // this part fails.. but why. these are simply ints.. 4 in total..
 
         archive(vec_in);
 
@@ -295,7 +295,6 @@ int main()
 
         for (auto& item : arr_in)
             std::cout << item << std::endl;
-
 
         for (auto& item : arr2_in)
             std::cout << item << std::endl;
