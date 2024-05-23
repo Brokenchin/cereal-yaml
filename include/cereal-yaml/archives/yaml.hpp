@@ -327,6 +327,19 @@ class YAMLInputArchive : public InputArchive<YAMLInputArchive>, public traits::T
 {
     typedef YAML::const_iterator YAMLIterator;
 
+    //needed to potentially read the values back.
+    Style current_style = Style::Block;
+
+public:
+
+    void Set_Style_Flow() {
+        current_style = Style::Flow;
+    }
+
+    void Set_Style_Block() {
+        current_style = Style::Block;
+    }
+
 public:
     YAMLInputArchive(std::istream& stream)
         : InputArchive<YAMLInputArchive>(this)

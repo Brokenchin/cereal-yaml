@@ -4,15 +4,16 @@
 #include <cereal/types/memory.hpp>
 #include <cereal/types/unordered_map.hpp>
 #include <cereal/types/vector.hpp>
-// #include <cereal/types/array.hpp>
+//#include <cereal/types/array.hpp>
 #include <array>
 #include <vector>
 
 
 #include <fstream>
 #include <type_traits>
+#include <cereal/archives/binary.hpp>
 
-#include "cereal-yaml/helper/utility.hpp"
+#include "cereal-yaml/helper/formatting.hpp"
 
 #include <cereal/archives/json.hpp>
 namespace cereal {
@@ -150,177 +151,159 @@ inline std::ostream& operator<<(std::ostream& os, const SomeData& someData)
 int main()
 {
 
+    std::vector<MyRecord> arr = {MyRecord(1, 2, 3.0f), MyRecord(4, 5, 6.1f), MyRecord(7, 8, 9.2f), MyRecord(10, 11, 12.3f)};
+    std::array<int, 4> arr2 = {4, 3, 2, 1};
+    std::vector<int> vec = {4, 3, 2, 1};
 
 
     std::ostringstream os;
     os.clear();
     os.str("");
 
+    std::cout << "------------ YAML -------------- :\n" << std::endl;
+
     {
         cereal::YAMLOutputArchive archive(os);
-        std::vector<MyRecord> arr = {MyRecord(1, 2, 3.0f), MyRecord(4, 5, 6.1f), MyRecord(7, 8, 9.2f), MyRecord(10, 11, 12.3f)};
-        std::array<int, 4> arr2 = {4, 3, 2, 1};
-        std::vector<int> vec = {4, 3, 2, 1};
-        //not the cleabest but it does work.. problem is this requires to set code in separate functions.
-        // archive.setNextName("Arr");
 
-        //Current issue. that this is used so we cannot use same code for only 1 serialize method.. in addition.. This does not follow same standard as the other Archives.
-        //archive.makeFlow("Arr");
+        cereal::Format_Flow(archive, "Vector", arr);
+        cereal::Format_Flow(archive, "Array", arr2, 4);
 
-        // for (auto&& value : arr2)
-        //     archive(value);
+        archive(cereal::make_nvp("Array3", vec));
 
-        // archive(cereal::make_size_tag(arr2.size()));
-        // archive(std::string("Entities"));
-        //
-        // for (auto&& value : arr)
-        //     archive(value);
-
-        // cereal::Set_YAML_Style_Flow(archive);
-
-        // archive(cereal::make_nvp("vec", vec));
-        //
-        // //cereal::Set_YAML_Style_Flow(archive);
-        // archive(cereal::make_nvp("Array", arr2));
-        //
-        // //cereal::Set_YAML_Style_Block(archive);
-        // archive(cereal::make_nvp("Array", arr2));
-
-
-        cereal::Format_Flow(archive, "Array", arr, 4);
-
-        cereal::Set_YAML_Style_Block(archive);
-        archive.setNextName("Arr");
-
-
-        archive(arr);
-
-        //archive.endFlow();
-
-        // cereal::Set_YAML_Style_Flow(archive);
-        // archive.setNextName("array");
-        // archive.startNode();
-        // archive.makeArray();
-        //
-        // archive(5);
-        // archive(3);
-        // archive(2);
-        // archive(4);
-        // archive.finishNode();
-
-        archive(arr2);
-        // archive(cereal::make_nvp("Array", arr2));
-        //cereal::Set_YAML_Style_Block(archive);
-
-        std::ifstream is(os.str());
-        // cereal::YAMLInputArchive archive2(is);
-        // cereal::JSONOutputArchive archive3(os);
-
-
-
-        //
-        // cereal::Set_YAML_Style_Flow(archive3);
     }
 
-    std::cout << "output=\n" << os.str() << std::endl;
+        std::cout << "output:\n" << os.str() << std::endl;
 
     {
-        // std::istringstream is(os.str());
-        // cereal::YAMLInputArchive archive(is);
-        // std::array<MyRecord, 4> arr{};
-        // std::array<int, 4> arr2{};
-        //
-        // archive(arr);
-        //
-        // std::cout << "arr1 = " << arr[0] << "," << arr[1] << "," << arr[2] << "," << arr[3] << std::endl;
-        // archive.setNextName("Int_Array");
-        // archive(arr2);
-        //
-        // std::cout << "arr2 = " << arr2[0] << "," << arr2[1] << "," << arr2[2] << "," << arr2[3] << std::endl;
+        std::istringstream is(os.str());
+
+        std::vector<MyRecord> arr_in = {};
+        arr_in.resize(4);
+        std::array<int, 4> arr2_in = {};
+        std::vector<int> vec_in = {};
+        vec_in.resize(4);
+
+        cereal::YAMLInputArchive archive(is);
+
+
+        //archive(cereal::make_nvp("Array", arr));
+        cereal::Format_Flow(archive, "Vector", arr_in);
+        cereal::Format_Flow(archive, "Array", arr2_in, 4);
+
+        archive(cereal::make_nvp("Array3", vec_in));
+
+        std::cout << "input:\n" << std::endl;
+
+        for (auto& item : arr_in)
+            std::cout << item << std::endl;
+
+
+        for (auto& item : arr2_in)
+            std::cout << item << std::endl;
+
+        for (auto& item : vec_in)
+            std::cout << item << std::endl;
+
 
     }
 
-   //  std::ostringstream os;
-   //  {
-   //      cereal::YAMLOutputArchive archive(os);
-   //      SomeData myData;
-   //      myData.id = 5;
-   //      myData.data = std::unordered_map<uint32_t, MyRecord>();
-   //      myData.data.emplace(1, MyRecord{1, 2, 3.0f});
-   //      myData.data.emplace(2, MyRecord{4, 5, 6.1f});
-   //      std::cout << "myData=" << myData << std::endl;
-   //      //Beging Map Seq
-   //      archive(cereal::make_nvp("Data" , myData));
-   //      //Ends here.
-   //      //begins another seq
-   //      archive(cereal::make_nvp("Data2" , myData));
-   //  }
-   //  std::cout << "output=\n" << os.str() << std::endl;
-   //
-   //  // std::istringstream is(os.str());
-   //  // {
-   //  //     cereal::YAMLInputArchive archive(is);
-   //  //     SomeData myData;
-   //  //     archive(myData);
-   //  //     std::cout << "myData=" << myData << std::endl;
-   //  // }
-   //
-   //  std::cout << "---------" << os.str() << std::endl;
-   //  std::cout << "output2=\n" << os.str() << std::endl;
-   //
-   //      std::ostringstream os2;
-   //  {
-   //
-   //      cereal::YAMLOutputArchive archive(os2);
-   //      // bool arr[] = {true, false};
-   //      // std::array<bool, 2> test = {true, false};
-   //      // std::vector<MyRecord> vec = {MyRecord(1,0,0), MyRecord(2,0,0), MyRecord(3,0,0), MyRecord(4,0,0)};
-   //      // archive(cereal::make_nvp("Scene", std::string("Untitled")),
-   //      //         cereal::make_nvp("Entities",vec),
-   //      //         cereal::make_nvp("arr", arr));
-   //
-   //      archive(cereal::make_nvp("Entity", 01234566));
-   //
-   //      //It seems to Need to implement few things in my own.
-   //      //also a flow... how to do that.. also why array is not a flow..
-   //      archive.setNextName("Tag Component");
-   //      archive.startNode();
-   //      std::array<bool, 2> test = {true, false};
-   //      archive(cereal::make_nvp("Tag", std::string("Player")));
-   //
-   //      // archive.setNextName("arr");
-   //      // archive.startNode();
-   //      archive.makeFlow("arr"); // Serializes the size
-   //
-   //      //archive(test);
-   //      for (auto&& value : test)
-   //          archive(value);
-   //
-   //      // archive.makeComment("This is a comment");
-   //
-   //      archive.endFlow();
-   //      //this almost worked.. but the key is missing this outputs: [true, false] but not the array key.
-   //      archive.endFlow();
-   //      archive(cereal::make_nvp("arr", test));
-   //      archive.finishNode();
-   //
-   // // archive.finishNode();
-   //      archive(cereal::make_nvp("arr", test));
-   //
-   //      //Aha this will allow me to set a node in between as example for the type.
-   //      // archive()
-   //
-   //  }
-   //
-   //
-   //
-   //  {
-   //      std::istringstream is(os.str());
-   //      cereal::YAMLInputArchive archive(is);
-   //  }
-   //
-   //  std::cout << "output=\n" << os2.str() << std::endl;
+    std::cout << "------------ JSON -------------- :\n" << std::endl;
 
+    os.clear();
+    os.str("");
+
+    {
+
+        cereal::JSONOutputArchive archive(os);
+        cereal::Format_Flow(archive, "Vector", arr);
+        cereal::Format_Flow(archive, "Array", arr2, 4);
+
+        archive(cereal::make_nvp("Array3", vec));
+
+    }
+
+        std::cout << "output:\n" << os.str() << std::endl;
+
+    {
+        std::istringstream is(os.str());
+
+        std::vector<MyRecord> arr_in = {};
+        arr_in.resize(4);
+        std::array<int, 4> arr2_in = {};
+        std::vector<int> vec_in = {};
+        vec_in.resize(4);
+
+        cereal::JSONInputArchive archive(is);
+
+        cereal::Format_Flow(archive, "Vector", arr_in);
+        cereal::Format_Flow(archive, "Array", arr2_in, 4);
+
+        archive(cereal::make_nvp("Array3", vec_in));
+
+        std::cout << "input:\n" << std::endl;
+
+        for (auto& item : arr_in)
+            std::cout << item << std::endl;
+
+
+        for (auto& item : arr2_in)
+            std::cout << item << std::endl;
+
+        for (auto& item : vec_in)
+            std::cout << item << std::endl;
+
+
+    }
+
+    os.clear();
+    os.str("");
+
+    std::cout << "------------ BINARY -------------- :\n" << std::endl;
+
+
+    {
+
+        std::ofstream osb("out.cereal", std::ios::binary);
+
+        cereal::BinaryOutputArchive archive(osb);
+
+        cereal::Format_Flow(archive, "Vector", arr);
+        cereal::Format_Flow(archive, "Array", arr, 4);
+
+        archive(vec);
+
+    }
+
+    {
+
+
+        std::vector<MyRecord> arr_in = {};
+        arr_in.resize(4);
+        std::array<int, 4> arr2_in = {};
+        std::vector<int> vec_in = {};
+        vec_in.resize(4);
+
+        std::ifstream isb("out.cereal", std::ios::binary);
+        cereal::BinaryInputArchive archive(isb);
+
+        cereal::Format_Flow(archive, "Vector", arr_in);
+        cereal::Format_Flow(archive, "Array", arr2_in, 4);
+
+        archive(vec_in);
+
+        std::cout << "input:\n" << std::endl;
+
+        for (auto& item : arr_in)
+            std::cout << item << std::endl;
+
+
+        for (auto& item : arr2_in)
+            std::cout << item << std::endl;
+
+        for (auto& item : vec_in)
+            std::cout << item << std::endl;
+
+    }
 
     return 0;
 }
