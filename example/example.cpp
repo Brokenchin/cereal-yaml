@@ -92,6 +92,7 @@ struct MyRecord
     void serialize(Archive& ar)
     {
         ar(cereal::make_nvp("Entity", id), y, cereal::make_nvp("Useless Z", z));
+
         ar(CEREAL_NVP(tag_comp));
     }
 
@@ -165,53 +166,58 @@ int main()
     {
         cereal::YAMLOutputArchive archive(os);
 
-        cereal::Format_Flow(archive, "Vector", arr);
-        cereal::Format_Flow(archive, "Array", arr2, 4);
+        //cereal::Format_Flow(archive, "Vector", arr);
 
-        archive(cereal::make_nvp("Array3", vec));
+        //cereal::Make_Named_Pair(name, data)
+        archive(cereal::make_nvp("Entities", arr));
+        //
+        // cereal::Format_Flow(archive, "Array", arr2, 4);
+        //
+        // archive(cereal::make_nvp("Array3", vec));
 
     }
 
         std::cout << "output:\n" << os.str() << std::endl;
-
-    {
-        std::istringstream is(os.str());
-
-        std::vector<MyRecord> arr_in = {};
-        arr_in.resize(4);
-        std::array<int, 4> arr2_in = {};
-        std::vector<int> vec_in = {};
-        vec_in.resize(4);
-
-        cereal::YAMLInputArchive archive(is);
-
-
-        //archive(cereal::make_nvp("Array", arr));
-        cereal::Format_Flow(archive, "Vector", arr_in);
-        cereal::Format_Flow(archive, "Array", arr2_in, 4);
-
-        archive(cereal::make_nvp("Array3", vec_in));
-
-        std::cout << "input:\n" << std::endl;
-
-        for (auto& item : arr_in)
-            std::cout << item << std::endl;
-
-
-        for (auto& item : arr2_in)
-            std::cout << item << std::endl;
-
-        for (auto& item : vec_in)
-            std::cout << item << std::endl;
-
-
-    }
+    //
+    // {
+    //     std::istringstream is(os.str());
+    //
+    //     std::vector<MyRecord> arr_in = {};
+    //     arr_in.resize(4);
+    //     std::array<int, 4> arr2_in = {};
+    //     std::vector<int> vec_in = {};
+    //     vec_in.resize(4);
+    //
+    //     cereal::YAMLInputArchive archive(is);
+    //
+    //
+    //     //archive(cereal::make_nvp("Array", arr));
+    //     cereal::Format_Flow(archive, "Vector", arr_in);
+    //     cereal::Format_Flow(archive, "Array", arr2_in, 4);
+    //
+    //     archive(cereal::make_nvp("Array3", vec_in));
+    //
+    //     std::cout << "input:\n" << std::endl;
+    //
+    //     for (auto& item : arr_in)
+    //         std::cout << item << std::endl;
+    //
+    //
+    //     for (auto& item : arr2_in)
+    //         std::cout << item << std::endl;
+    //
+    //     for (auto& item : vec_in)
+    //         std::cout << item << std::endl;
+    //
+    //
+    // }
 
     std::cout << "------------ JSON -------------- :\n" << std::endl;
 
     os.clear();
     os.str("");
 
+#ifdef FALSE
     {
 
         cereal::JSONOutputArchive archive(os);
@@ -260,7 +266,9 @@ int main()
 
     std::cout << "------------ BINARY -------------- :\n" << std::endl;
 
+#endif
 
+#ifdef FALSE
     {
 
         std::ofstream osb("out.cereal", std::ios::binary);
@@ -303,6 +311,9 @@ int main()
             std::cout << item << std::endl;
 
     }
+
+#endif
+
 
     return 0;
 }
