@@ -44,11 +44,35 @@
 
 namespace cereal {
 
+
+enum class Style { Block, Flow };
+
+
 class YAMLOutputArchive : public OutputArchive<YAMLOutputArchive>, public traits::TextArchive
 {
-    enum class NodeType { StartObject, InObject, StartArray, InArray };
+    enum class NodeType { StartObject, InObject, StartArray, InArray, StartFlow, InFlow };
+
+    Style current_style = Style::Block;
 
 public:
+
+    void Set_Style_Flow() {
+        current_style = Style::Flow;
+    }
+
+    void Set_Style_Block() {
+        current_style = Style::Block;
+    }
+
+    // void Set_Style(const Style style) {
+    //     if (style == Style::Block) {
+    //         current_style = Style::Block;
+    //     }
+    //     else {
+    //         current_style = Style::Flow;
+    //     }
+    // }
+
     YAMLOutputArchive(std::ostream& stream)
         : OutputArchive<YAMLOutputArchive>(this)
         , out(stream)
@@ -65,6 +89,10 @@ public:
             emitter << YAML::EndMap;
         }
         else if (nodeStack.top() == NodeType::InArray)
+        {
+            emitter << YAML::EndSeq;
+        }
+        else if (nodeStack.top() == NodeType::InFlow)
         {
             emitter << YAML::EndSeq;
         }
@@ -112,8 +140,15 @@ public:
         // We'll also end any object/arrays we happen to be in
         switch(nodeStack.top())
         {
-        case NodeType::StartArray:
+        case NodeType::StartFlow:
             emitter << YAML::BeginSeq;
+            break;
+        case NodeType::InFlow:
+            emitter << YAML::EndSeq;
+            break;
+        case NodeType::StartArray: {
+            emitter << YAML::BeginSeq;
+        }
         case NodeType::InArray:
             emitter << YAML::EndSeq;
             break;
@@ -122,6 +157,7 @@ public:
         case NodeType::InObject:
             emitter << YAML::EndMap;
             break;
+
         }
 
         nodeStack.pop();
@@ -137,7 +173,9 @@ public:
     //! Saves a bool to the current node
     void saveValue(bool b)                { emitter << b;   }
     //! Saves an int to the current node
-    void saveValue(int i)                 { emitter << i;   }
+    void saveValue(int i) {
+        emitter << i;
+    }
     //! Saves a uint to the current node
     void saveValue(unsigned u)            { emitter << u;   }
     //! Saves an int64 to the current node
@@ -228,13 +266,19 @@ public:
         NodeType const & nodeType = nodeStack.top();
 
         // Start up either an object or an array, depending on state
-        if (nodeType == NodeType::StartArray)
-        {
+
+         if (nodeType == NodeType::StartArray)
+         {
+
+            if (current_style == Style::Flow)
+                emitter << YAML::Flow;
+
             emitter << YAML::BeginSeq;
             nodeStack.top() = NodeType::InArray;
         }
         else if (nodeType == NodeType::StartObject)
         {
+
             emitter << YAML::BeginMap;
             nodeStack.top() = NodeType::InObject;
         }
@@ -282,6 +326,19 @@ private:
 class YAMLInputArchive : public InputArchive<YAMLInputArchive>, public traits::TextArchive
 {
     typedef YAML::const_iterator YAMLIterator;
+
+    //needed to potentially read the values back.
+    Style current_style = Style::Block;
+
+public:
+
+    void Set_Style_Flow() {
+        current_style = Style::Flow;
+    }
+
+    void Set_Style_Block() {
+        current_style = Style::Block;
+    }
 
 public:
     YAMLInputArchive(std::istream& stream)
@@ -615,6 +672,7 @@ private:
 
 }; // YAMLInputArchive
 
+
 // ######################################################################
 // YAMLArchive prologue and epilogue functions
 // ######################################################################
@@ -649,7 +707,7 @@ void epilogue(YAMLInputArchive &, NameValuePair<T> const &)
 /*! SizeTags are strictly ignored for YAML, they just indicate
     that the current node should be made into an array */
 template <class T> inline
-void prologue(YAMLOutputArchive & ar, SizeTag<T> const &)
+void prologue(YAMLOutputArchive & ar, SizeTag<T> const & sz)
 {
     ar.makeArray();
 }
