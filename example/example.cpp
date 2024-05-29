@@ -91,7 +91,8 @@ struct MyRecord
     template <class Archive>
     void serialize(Archive& ar)
     {
-        ar(cereal::make_nvp("Entity", id), y, cereal::make_nvp("Useless Z", z));
+        ar(cereal::make_nvp("Entity", id));
+        ar(y, cereal::make_nvp("Useless Z", z));
 
         ar(CEREAL_NVP(tag_comp));
     }
@@ -169,21 +170,59 @@ int main()
         //cereal::Format_As_Flow(archive, "Vector", arr);
 
         //cereal::Make_Named_Pair(name, data)
-        //archive(cereal::make_nvp("Entities", arr));
+
+        archive.setNextName("Vector");
+        archive.startNode();
+        archive.makeArray();
+
+        for (auto& item : arr) {
+            archive.startNode();
+            archive(cereal::make_nvp("Ent", item.id));
+            archive(item.y, cereal::make_nvp("Useless", item.z));
+
+            //archive.startNode();
+            //archive(item.tag_comp);
+            archive(CEREAL_NVP(item.tag_comp)); //for reason this does not require a new node.
+            archive.finishNode();
+        }
+
+        archive.finishNode();
+
+        //this works quite differently than I thought.
+        cereal::Format_As_Group(archive, "Entities3", [&arr, &archive]() {
+            //archive.makeArray();
+            for (auto& item : arr) {
+
+                archive.startNode(); //this what I was missing.. I think. so cereal starts a node on each item.
+
+                archive(cereal::make_nvp("Ent", item.id));
+                archive(item.y, cereal::make_nvp("Useless", item.z));
+
+                //archive.startNode();
+                //archive(item.tag_comp);
+                archive(CEREAL_NVP(item.tag_comp)); //for reason this does not require a new node.
+                //archive.finishNode();
+
+                archive.finishNode();
+
+            }
+
+        });
+
+
+
+        // //this works quite differently than I thought.
+        cereal::Format_As_Group(archive, "Scene", [&arr, &arr2, &archive]() {
         //
-        // archive.setNextName("Entities");
-        // archive.startNode();
-        // archive.makeArray();
-        // for (auto& item : arr)
-        //     archive(item);
+
+            cereal::Format_As_Array(archive, "Entities", arr, 3, true, "Ent_");
+            cereal::Format_As_Flow(archive, "Random_Values", arr2, 4);
+            // for (auto& item : arr) {
+            //     //archive.startNode(); //this what I was missing.. I think. so cereal starts a node on each item.
+            //     archive(item);
+            //     //archive.finishNode();
+            // }
         //
-        // archive.finishNode();
-
-        cereal::Format_As_Group(archive, "Entities", [&arr, &archive]() {
-
-            for (auto& item : arr)
-                archive(item);
-
         });
 
 

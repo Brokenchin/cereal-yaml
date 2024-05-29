@@ -154,7 +154,6 @@ namespace cereal {
 
         archive.setNextName(name);
         archive.startNode();
-        archive.makeArray();
 
         fn();
 
@@ -187,6 +186,89 @@ namespace cereal {
         fn();
 
     };
+
+
+    //---------------------- Setting Array Block For Next -----------------------------------//
+
+    //--  Write --------//
+
+    template<typename Archive_T, typename T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
+    static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type //why is it so hard to make this work?
+    Format_As_Array(Archive_T& archive, const char* name, T & data, size_t size, bool separate_objects = false, const std::string & prefix = "") {
+
+        archive.setNextName(name);
+        archive.startNode();
+        archive.makeArray();
+
+        if (!separate_objects)
+            for (size_t i = 0; i < size; i++)
+                archive(data[i]);
+        else
+            for (size_t i = 0; i < size; i++) {
+                auto val = prefix + std::to_string(i);
+                archive.setNextName(val.c_str());
+                archive.startNode();
+                archive(data[i]);
+                archive.finishNode();
+            }
+
+        archive.finishNode();
+
+    };
+
+    //--  Read --------//
+
+    template<typename Archive_T, typename T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
+    static typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type //why is it so hard to make this work?
+    Format_As_Array(Archive_T& archive, const char* name, T & data, size_t size, bool separate_objects = false, const std::string & prefix = "") {
+
+        archive.setNextName(name);
+        archive.startNode();
+        archive.makeArray();
+
+        if (!separate_objects)
+            for (size_t i = 0; i < size; i++)
+                archive(data[i]);
+        else
+            for (size_t i = 0; i < size; i++) {
+                auto val = prefix + std::to_string(i);
+                archive.setNextName(val.c_str());
+                archive.startNode();
+                archive(data[i]);
+                archive.finishNode();
+            }
+
+        archive.finishNode();
+
+    };
+
+    namespace Control {
+
+        template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
+        static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+        Start_Array(YAMLOutputArchive& archive, const char* name) {
+            if (name != nullptr)
+                archive.setNextName(name);
+            archive.makeArray();
+
+        };
+
+        template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
+        static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+        Start_Node(YAMLOutputArchive& archive, const char* name) {
+            if (name != nullptr)
+                archive.setNextName(name);
+            archive.startNode();
+        };
+
+        template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
+        static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+        Finish_Node(YAMLOutputArchive& archive) {
+
+            archive.finishNode();
+        };
+
+    }
 
 }
 
