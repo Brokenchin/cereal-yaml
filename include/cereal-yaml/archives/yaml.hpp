@@ -2,6 +2,7 @@
     \brief YAML input and output archives */
 /*
   Copyright (c) 2017, Matt Continisio
+  Copyright (c) 2024, Brokenchin
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -140,7 +141,7 @@ public:
         // We'll also end any object/arrays we happen to be in
         switch(nodeStack.top())
         {
-        case NodeType::StartFlow:
+        case NodeType::StartFlow: //TODO clean this code. I dont think this is used at all.
             emitter << YAML::BeginSeq;
             break;
         case NodeType::InFlow:
