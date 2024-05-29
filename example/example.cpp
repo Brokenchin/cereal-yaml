@@ -166,12 +166,29 @@ int main()
     {
         cereal::YAMLOutputArchive archive(os);
 
-        //cereal::Format_Flow(archive, "Vector", arr);
+        //cereal::Format_As_Flow(archive, "Vector", arr);
 
         //cereal::Make_Named_Pair(name, data)
-        archive(cereal::make_nvp("Entities", arr));
+        //archive(cereal::make_nvp("Entities", arr));
         //
-        // cereal::Format_Flow(archive, "Array", arr2, 4);
+        // archive.setNextName("Entities");
+        // archive.startNode();
+        // archive.makeArray();
+        // for (auto& item : arr)
+        //     archive(item);
+        //
+        // archive.finishNode();
+
+        cereal::Format_As_Group(archive, "Entities", [&arr, &archive]() {
+
+            for (auto& item : arr)
+                archive(item);
+
+        });
+
+
+        //
+        // cereal::Format_As_Flow(archive, "Array", arr2, 4);
         //
         // archive(cereal::make_nvp("Array3", vec));
 
@@ -192,8 +209,8 @@ int main()
     //
     //
     //     //archive(cereal::make_nvp("Array", arr));
-    //     cereal::Format_Flow(archive, "Vector", arr_in);
-    //     cereal::Format_Flow(archive, "Array", arr2_in, 4);
+    //     cereal::Format_As_Flow(archive, "Vector", arr_in);
+    //     cereal::Format_As_Flow(archive, "Array", arr2_in, 4);
     //
     //     archive(cereal::make_nvp("Array3", vec_in));
     //
@@ -221,8 +238,8 @@ int main()
     {
 
         cereal::JSONOutputArchive archive(os);
-        cereal::Format_Flow(archive, "Vector", arr);
-        cereal::Format_Flow(archive, "Array", arr2, 4);
+        cereal::Format_As_Flow(archive, "Vector", arr);
+        cereal::Format_As_Flow(archive, "Array", arr2, 4);
 
         archive(cereal::make_nvp("Array3", vec));
 
@@ -241,8 +258,8 @@ int main()
 
         cereal::JSONInputArchive archive(is);
 
-        cereal::Format_Flow(archive, "Vector", arr_in);
-        cereal::Format_Flow(archive, "Array", arr2_in, 4);
+        cereal::Format_As_Flow(archive, "Vector", arr_in);
+        cereal::Format_As_Flow(archive, "Array", arr2_in, 4);
 
         archive(cereal::make_nvp("Array3", vec_in));
 
@@ -275,8 +292,8 @@ int main()
 
         cereal::BinaryOutputArchive archive(osb);
 
-        cereal::Format_Flow(archive, "Vector", arr);
-        cereal::Format_Flow(archive, "Array", arr2, 4);
+        cereal::Format_As_Flow(archive, "Vector", arr);
+        cereal::Format_As_Flow(archive, "Array", arr2, 4);
 
         archive(vec);
 
@@ -294,8 +311,8 @@ int main()
         std::ifstream isb("out.cereal", std::ios::binary);
         cereal::BinaryInputArchive archive(isb);
 
-        cereal::Format_Flow(archive, "Vector", arr_in);
-        cereal::Format_Flow(archive, "Array", arr2_in, 4); // this part fails.. but why. these are simply ints.. 4 in total..
+        cereal::Format_As_Flow(archive, "Vector", arr_in);
+        cereal::Format_As_Flow(archive, "Array", arr2_in, 4); // this part fails.. but why. these are simply ints.. 4 in total..
 
         archive(vec_in);
 

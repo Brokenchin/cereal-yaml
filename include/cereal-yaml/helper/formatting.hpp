@@ -9,12 +9,6 @@
 
 namespace cereal {
 
-    //TODO take into accoun non text archives.
-    template <typename Archive, typename = std::enable_if_t<traits::is_text_archive<Archive>::value>>
-    void myMethod(Archive& archive) {
-        // Your method implementation here
-    }
-
     //-------------------------- Setting Style Directly -------------------------------------//
 
     template<typename Archive_T> static
@@ -48,7 +42,7 @@ namespace cereal {
     // // Customization for YAMLOutputArchive to enable flow style
     template<typename Archive_T, typename T> static
     typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-    Format_Flow(Archive_T& archive, const char* name, T& data) {
+    Format_As_Flow(Archive_T& archive, const char* name, T& data) {
 
         archive.Set_Style_Flow();
         archive.setNextName(name);
@@ -66,7 +60,7 @@ namespace cereal {
 
     template<typename Archive_T, typename T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
     static typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type //why is it so hard to make this work?
-    Format_Flow(Archive_T& archive, const char* name, T& data) {
+    Format_As_Flow(Archive_T& archive, const char* name, T& data) {
 
         archive.setNextName(name);
         archive.startNode();
@@ -77,7 +71,7 @@ namespace cereal {
     };
 
     template<class Archive_T, typename T, typename = std::enable_if_t<!traits::is_text_archive<Archive_T>::value>>
-    static void Format_Flow(Archive_T& archive, const char* name, T& data) {
+    static void Format_As_Flow(Archive_T& archive, const char* name, T& data) {
         for (auto& item : data)
             archive(item);
     };
@@ -89,7 +83,7 @@ namespace cereal {
     // // Customization for YAMLOutputArchive to enable flow style
     template<typename Archive_T, typename T> static
     typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-    Format_Flow(Archive_T& archive, const char* name, T& data, size_t size) {
+    Format_As_Flow(Archive_T& archive, const char* name, T& data, size_t size) {
 
         archive.Set_Style_Flow();
         archive.setNextName(name);
@@ -107,7 +101,7 @@ namespace cereal {
 
     template<typename Archive_T, typename T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
     static typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type //why is it so hard to make this work?
-    Format_Flow(Archive_T& archive, const char* name, T& data, const size_t size) {
+    Format_As_Flow(Archive_T& archive, const char* name, T& data, const size_t size) {
 
         archive.setNextName(name);
         archive.startNode();
@@ -117,12 +111,58 @@ namespace cereal {
 
     };
 
+    //--  Binary --------//
+
     template<class Archive_T, typename T, typename = std::enable_if_t<!traits::is_text_archive<Archive_T>::value>>
-    static void Format_Flow(Archive_T& archive, const char* name, T& data, const size_t size) {
+    static void Format_As_Flow(Archive_T& archive, const char* name, T& data, const size_t size) {
 
         //archive( make_size_tag( static_cast<size_type>(size) ) );
         for (size_t i = 0; i < size; i++)
             archive(data[i]);
+    };
+
+    //---------------------- Setting Style Block For Next -----------------------------------//
+
+    //--  Write --------//
+
+    template<typename Archive_T> static
+    typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+    Format_As_Group(Archive_T& archive, const char* name, const std::function<void()> & fn) {
+
+        archive.setNextName(name);
+        archive.startNode();
+        archive.makeArray();
+
+        fn();
+
+        archive.finishNode();
+
+    };
+
+    //--  Read --------//
+
+    template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
+    static typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type //why is it so hard to make this work?
+    Format_As_Group(Archive_T& archive, const char* name, std::function<void()> & fn) {
+
+        archive.setNextName(name);
+        archive.startNode();
+
+        fn();
+
+        archive.finishNode();
+
+    };
+
+
+
+    //--  Binary --------//
+
+    template<class Archive_T, typename = std::enable_if_t<!traits::is_text_archive<Archive_T>::value>>
+    static void Format_As_Group(Archive_T& archive, const char* name, const std::function<void()> & fn) {
+
+        fn();
+
     };
 
 }
