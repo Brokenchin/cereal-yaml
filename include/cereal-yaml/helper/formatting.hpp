@@ -77,6 +77,8 @@ namespace cereal {
 
         archive.finishNode();
 
+        archive.Set_Style_Block();
+
     };
 
     //-- Read --------//
@@ -117,6 +119,7 @@ namespace cereal {
             archive(data[i]);
 
         archive.finishNode();
+        archive.Set_Style_Block();
 
     };
 
@@ -196,7 +199,9 @@ namespace cereal {
     static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type //why is it so hard to make this work?
     Format_As_Array(Archive_T& archive, const char* name, T & data, size_t size, bool separate_objects = false, const std::string & prefix = "") {
 
-        archive.setNextName(name);
+        if (name != nullptr && name[0] != '\0')
+            archive.setNextName(name);
+
         archive.startNode();
         archive.makeArray();
 
@@ -220,9 +225,11 @@ namespace cereal {
 
     template<typename Archive_T, typename T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
     static typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type //why is it so hard to make this work?
-    Format_As_Array(Archive_T& archive, const char* name, T & data, size_t size, bool separate_objects = false, const std::string & prefix = "") {
+    Format_As_Array(Archive_T& archive, const char* name, T & data, size_t size, bool separate_objects = false, const std::string & prefix = "Value") {
 
-        archive.setNextName(name);
+        if (name != nullptr && name[0] != '\0')
+            archive.setNextName(name);
+
         archive.startNode();
         archive.makeArray();
 
@@ -242,28 +249,50 @@ namespace cereal {
 
     };
 
+    //--  Binary --------//
+
+    template<class Archive_T, typename T, typename = std::enable_if_t<!traits::is_text_archive<Archive_T>::value>>
+    static void Format_As_Array(Archive_T& archive, const char* name, T & data, size_t size, bool separate_objects = false, const std::string & prefix = "") {
+        for (size_t i = 0; i < size; i++)
+            archive(data[i]);
+
+    };
+
+    //---------------------- Directly Control Format -----------------------------------//
+
     namespace Control {
 
         template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
         static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-        Start_Array(YAMLOutputArchive& archive, const char* name) {
-            if (name != nullptr)
+        Start_Array(Archive_T& archive, const char* name) {
+
+            auto const has_name = name != nullptr && name[0] != '\0';
+
+            if (has_name) {
                 archive.setNextName(name);
+                archive.startNode();
+            }
+
             archive.makeArray();
+
+            if (has_name)
+                archive.finishNode();
 
         };
 
         template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
         static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-        Start_Node(YAMLOutputArchive& archive, const char* name) {
-            if (name != nullptr)
+        Start_Node(Archive_T& archive, const char* name) {
+
+            if (name != nullptr && name[0] != '\0')
                 archive.setNextName(name);
+
             archive.startNode();
         };
 
         template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
         static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-        Finish_Node(YAMLOutputArchive& archive) {
+        Finish_Node(Archive_T& archive) {
 
             archive.finishNode();
         };

@@ -171,29 +171,32 @@ int main()
 
         //cereal::Make_Named_Pair(name, data)
 
-        archive.setNextName("Vector");
-        archive.startNode();
-        archive.makeArray();
+        // archive.setNextName("Vector");
+        // archive.startNode();
+        // archive.makeArray();
+        //
+        // for (auto& item : arr) {
+        //     archive.startNode();
+        //     archive(cereal::make_nvp("Ent", item.id));
+        //     archive(item.y, cereal::make_nvp("Useless", item.z));
+        //
+        //     //archive.startNode();
+        //     //archive(item.tag_comp);
+        //     archive(CEREAL_NVP(item.tag_comp)); //for reason this does not require a new node.
+        //     archive.finishNode();
+        // }
+        //
+        // archive.finishNode();
 
-        for (auto& item : arr) {
-            archive.startNode();
-            archive(cereal::make_nvp("Ent", item.id));
-            archive(item.y, cereal::make_nvp("Useless", item.z));
 
-            //archive.startNode();
-            //archive(item.tag_comp);
-            archive(CEREAL_NVP(item.tag_comp)); //for reason this does not require a new node.
-            archive.finishNode();
-        }
-
-        archive.finishNode();
-
-        //this works quite differently than I thought.
-        cereal::Format_As_Group(archive, "Entities3", [&arr, &archive]() {
+        //this shows a raw way to Achieve similar format:
+        cereal::Format_As_Group(archive, "Scene_Raw", [&arr, &archive]() {
             //archive.makeArray();
             for (auto& item : arr) {
 
-                archive.startNode(); //this what I was missing.. I think. so cereal starts a node on each item.
+                cereal::Control::Start_Node(archive, nullptr);
+
+                cereal::Control::Start_Array(archive, "Entities");
 
                 archive(cereal::make_nvp("Ent", item.id));
                 archive(item.y, cereal::make_nvp("Useless", item.z));
@@ -203,7 +206,7 @@ int main()
                 archive(CEREAL_NVP(item.tag_comp)); //for reason this does not require a new node.
                 //archive.finishNode();
 
-                archive.finishNode();
+                cereal::Control::Finish_Node(archive);
 
             }
 
@@ -217,11 +220,26 @@ int main()
 
             cereal::Format_As_Array(archive, "Entities", arr, 3, true, "Ent_");
             cereal::Format_As_Flow(archive, "Random_Values", arr2, 4);
+            cereal::Format_As_Flow(archive, "Random_Values2", arr2, 4);
             // for (auto& item : arr) {
             //     //archive.startNode(); //this what I was missing.. I think. so cereal starts a node on each item.
             //     archive(item);
             //     //archive.finishNode();
             // }
+        //
+        });
+
+        cereal::Format_As_Group(archive, "Editor", [&arr, &arr2, &archive]() {
+//
+
+            cereal::Format_As_Array(archive, "Entities", arr, 3, false, "Ent_");
+            cereal::Format_As_Flow(archive, "Random_Values54", arr2, 4);
+            cereal::Format_As_Flow(archive, "Random_Values56", arr2, 4);
+        // for (auto& item : arr) {
+        //     //archive.startNode(); //this what I was missing.. I think. so cereal starts a node on each item.
+        //     archive(item);
+        //     //archive.finishNode();
+        // }
         //
         });
 
