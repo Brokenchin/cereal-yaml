@@ -190,25 +190,40 @@ int main()
 
 
         //this shows a raw way to Achieve similar format:
-        cereal::Format_As_Group(archive, "Scene_Raw", [&arr, &archive]() {
-            //archive.makeArray();
-            for (auto& item : arr) {
+        cereal::Format_As_Group(archive, "Scene_Raw", [&arr, &arr2, &archive]() {
 
-                cereal::Control::Start_Node(archive, nullptr);
+            //1st part
+            cereal::Control::Start_Node(archive, "Entities");
+            cereal::Control::Start_Array(archive);
 
-                cereal::Control::Start_Array(archive, "Entities");
-
-                archive(cereal::make_nvp("Ent", item.id));
-                archive(item.y, cereal::make_nvp("Useless", item.z));
-
-                //archive.startNode();
-                //archive(item.tag_comp);
-                archive(CEREAL_NVP(item.tag_comp)); //for reason this does not require a new node.
-                //archive.finishNode();
-
+            for (auto i = 0; i < 3; i++) {
+                auto name = "Ent_" + std::to_string(i);
+                cereal::Control::Start_Node(archive, name.c_str());
+                archive(arr[i]);
                 cereal::Control::Finish_Node(archive);
-
             }
+
+            cereal::Control::Finish_Node(archive);
+
+            //2nd part
+            cereal::Control::Style::Flow(archive);
+            cereal::Control::Start_Node(archive, "Random_Values");
+            cereal::Control::Start_Array(archive);
+
+            for (auto& item : arr2)
+                archive(item);
+
+            cereal::Control::Finish_Node(archive);
+            cereal::Control::Style::Block(archive);
+
+            //3rd part
+            cereal::Control::Style::Flow(archive);
+            cereal::Control::Start_Node(archive, "Random_Values2");
+            cereal::Control::Start_Array(archive);
+            for (auto& item : arr2)
+                archive(item);
+            cereal::Control::Finish_Node(archive);
+            cereal::Control::Style::Block(archive);
 
         });
 
@@ -216,17 +231,17 @@ int main()
 
         // //this works quite differently than I thought.
         cereal::Format_As_Group(archive, "Scene", [&arr, &arr2, &archive]() {
-        //
 
+
+            //1st part
             cereal::Format_As_Array(archive, "Entities", arr, 3, true, "Ent_");
+
+            //2nd part
             cereal::Format_As_Flow(archive, "Random_Values", arr2, 4);
+            //3rd part
             cereal::Format_As_Flow(archive, "Random_Values2", arr2, 4);
-            // for (auto& item : arr) {
-            //     //archive.startNode(); //this what I was missing.. I think. so cereal starts a node on each item.
-            //     archive(item);
-            //     //archive.finishNode();
-            // }
-        //
+
+
         });
 
         cereal::Format_As_Group(archive, "Editor", [&arr, &arr2, &archive]() {

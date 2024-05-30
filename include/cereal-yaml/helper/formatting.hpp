@@ -34,27 +34,7 @@ namespace cereal {
 
     //-------------------------- Setting Style Directly -------------------------------------//
 
-    template<typename Archive_T> static
-    typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-    Set_YAML_Style_Flow(Archive_T & ar) {
-        //ar(cereal::make_size_tag(0));
-        ar.Set_Style_Flow();
-    };
 
-    template<typename Archive_T> static
-    typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-    Set_YAML_Style_Flow(Archive_T & ar) {};
-
-    template<typename Archive_T> static
-    typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-    Set_YAML_Style_Block(Archive_T & ar) {
-        //ar(cereal::make_size_tag(0));
-        ar.Set_Style_Block();
-    };
-
-    template<typename Archive_T> static
-    typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-    Set_YAML_Style_Block(Archive_T & ar) {};
 
     //---------------------- Setting Style Flow For Next -----------------------------------//
 
@@ -264,25 +244,15 @@ namespace cereal {
 
         template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
         static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-        Start_Array(Archive_T& archive, const char* name) {
-
-            auto const has_name = name != nullptr && name[0] != '\0';
-
-            if (has_name) {
-                archive.setNextName(name);
-                archive.startNode();
-            }
+        Start_Array(Archive_T& archive) {
 
             archive.makeArray();
-
-            if (has_name)
-                archive.finishNode();
 
         };
 
         template<typename Archive_T, typename = std::enable_if_t<traits::is_text_archive<Archive_T>::value>>
         static typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
-        Start_Node(Archive_T& archive, const char* name) {
+        Start_Node(Archive_T& archive, const char* name = nullptr) {
 
             if (name != nullptr && name[0] != '\0')
                 archive.setNextName(name);
@@ -296,6 +266,48 @@ namespace cereal {
 
             archive.finishNode();
         };
+
+        template<typename Archive_T> static
+        typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+        Set_YAML_Style_Flow(Archive_T & ar) {
+            //ar(cereal::make_size_tag(0));
+            ar.Set_Style_Flow();
+        };
+
+        template<typename Archive_T> static
+        typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+        Set_YAML_Style_Flow(Archive_T & ar) {};
+
+        template<typename Archive_T> static
+        typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+        Set_YAML_Style_Block(Archive_T & ar) {
+            //ar(cereal::make_size_tag(0));
+            ar.Set_Style_Block();
+        };
+
+        template<typename Archive_T> static
+        typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+        Set_YAML_Style_Block(Archive_T & ar) {};
+
+        namespace Style {
+
+            template<typename Archive_T> static
+            typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+            Flow(Archive_T & ar) { ar.Set_Style_Flow(); };
+
+            template<typename Archive_T> static
+            typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+            Flow(Archive_T & ar) {};
+
+            template<typename Archive_T> static
+            typename std::enable_if<cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+            Block(Archive_T & ar) { ar.Set_Style_Block(); };
+
+            template<typename Archive_T> static
+            typename std::enable_if<!cereal::traits::is_same_archive<Archive_T, YAMLOutputArchive>::value, void>::type
+            Block(Archive_T & ar) {};
+
+        }
 
     }
 
